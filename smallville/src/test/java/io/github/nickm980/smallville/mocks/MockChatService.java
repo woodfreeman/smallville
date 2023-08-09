@@ -4,24 +4,15 @@ import java.util.List;
 
 import io.github.nickm980.smallville.entities.Agent;
 import io.github.nickm980.smallville.entities.Conversation;
-import io.github.nickm980.smallville.entities.memory.Memory;
-import io.github.nickm980.smallville.entities.memory.Plan;
+import io.github.nickm980.smallville.entities.Dialog;
+import io.github.nickm980.smallville.memory.Plan;
+import io.github.nickm980.smallville.memory.Reflection;
+import io.github.nickm980.smallville.prompts.Prompts;
 import io.github.nickm980.smallville.prompts.dto.CurrentActivity;
 import io.github.nickm980.smallville.prompts.dto.ObjectChangeResponse;
 import io.github.nickm980.smallville.prompts.dto.Reaction;
-import io.github.nickm980.smallville.update.IChatService;
 
-public class MockChatService implements IChatService {
-
-    @Override
-    public String getExactLocation(Agent agent) {
-	return agent.getLocation().getName();
-    }
-
-    @Override
-    public List<Memory> convertFuturePlansToMemories(List<Plan> plans) {
-	return null;
-    }
+public class MockChatService implements Prompts {
 
     @Override
     public ObjectChangeResponse[] getObjectsChangedBy(Agent agent) {
@@ -34,12 +25,7 @@ public class MockChatService implements IChatService {
     }
 
     @Override
-    public Conversation getConversationIfExists(Agent agent, Agent other) {
-	return null;
-    }
-
-    @Override
-    public CurrentActivity getCurrentPlan(Agent agent) {
+    public CurrentActivity getCurrentActivity(Agent agent) {
 	// TODO Auto-generated method stub
 	return null;
     }
@@ -59,14 +45,33 @@ public class MockChatService implements IChatService {
     public String ask(Agent agent, String question) {
 	return null;
     }
-
+    
     @Override
-    public Reaction getReaction(Agent agent, String observation) {
+    public int[] getWeights(Agent agent) {
 	return null;
     }
 
     @Override
-    public int[] getWeights(Agent agent) {
+    public Reflection createReflectionFor(Agent agent) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Reaction shouldUpdatePlans(Agent agent, String observation) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Conversation getConversationIfExists(Agent agent, Agent other, String topic) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    @Override
+    public Dialog saySomething(Agent agent, String observation) {
+	// TODO Auto-generated method stub
 	return null;
     }
 

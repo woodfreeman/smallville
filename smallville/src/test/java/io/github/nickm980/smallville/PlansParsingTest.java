@@ -1,15 +1,18 @@
 package io.github.nickm980.smallville;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.Test;
 
-import io.github.nickm980.smallville.entities.memory.MemoryStream;
-import io.github.nickm980.smallville.entities.memory.Plan;
+import io.github.nickm980.smallville.entities.Agent;
 import io.github.nickm980.smallville.llm.ChatGPT;
-import io.github.nickm980.smallville.update.ChatService;
+import io.github.nickm980.smallville.memory.MemoryStream;
+import io.github.nickm980.smallville.memory.Plan;
+import io.github.nickm980.smallville.prompts.ChatService;
 
 public class PlansParsingTest {
 
@@ -18,11 +21,11 @@ public class PlansParsingTest {
 	ChatService service = new ChatService(new World(), new ChatGPT());
 
 	List<Plan> plans = service.parsePlans("""
-		Walk to the farmhouse at 2:00 PM
-		\nMeet with the farmer to discuss crops at 2:30 PM
+		2:01 am at Red House: Bedroom, sleeping
+		\n  2:30 PM Meet with the farmer to discuss crops at
 		\nHelp with feeding the animals from 3:00 PM - 4:00 PM
 		\nRead a book under the shade of a tree from 4:00 PM - 5:00 PM
-		\nHave dinner at home at 6:00 PM.
+		\n2:20 am at Red House: Bedroom, still sleeping
 		""");
 
 	assertTrue(plans.size() == 5);
@@ -53,9 +56,8 @@ public class PlansParsingTest {
 				""");
 	MemoryStream stream = new MemoryStream();
 
-	stream.addPlans(plans);
+	stream.addAll(plans);
 
-	stream.prunePlans();
 	assertTrue(stream.getPlans().size() == 1);
     }
 }

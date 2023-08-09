@@ -6,7 +6,7 @@ import java.util.Map;
 import io.github.nickm980.smallville.World;
 import io.github.nickm980.smallville.entities.Agent;
 import io.github.nickm980.smallville.entities.Conversation;
-import io.github.nickm980.smallville.entities.SimulatedLocation;
+import io.github.nickm980.smallville.entities.Location;
 import io.github.nickm980.smallville.exceptions.SmallvilleException;
 import io.github.nickm980.smallville.prompts.dto.DateModel;
 import io.github.nickm980.smallville.prompts.dto.WorldModel;
@@ -15,21 +15,23 @@ public class PromptBuilder {
 
     private Map<String, Object> data;
     private String prompt;
-    private final MiniPrompts prompts;
-
+    private final TemplateMapper prompts;
+    private Agent agent;
+    
     public PromptBuilder() {
 	this.data = new HashMap<>();
-	this.prompts = new MiniPrompts();
+	this.prompts = new TemplateMapper();
 
 	data.put("ping", "pong");
 	data.put("date", new DateModel());
     }
 
     public PromptBuilder withAgent(Agent agent) {
+	this.agent = agent;
 	data.put("agent", prompts.fromAgent(agent));
 
 	if (data.get("memories.unranked") == null) {
-	    data.put("memories.unranked", agent.getMemoryStream().getCharacteristics());
+	    data.put("memories.unranked", agent.getMemoryStream().getUnweightedMemories());
 	}
 
 	if (data.get("memories.characteristics") == null) {
@@ -43,7 +45,19 @@ public class PromptBuilder {
 	return this;
     }
 
-    public PromptBuilder withLocations(List<SimulatedLocation> locations) {
+    public PromptBuilder withStatements(List<String> statements) {
+	String result = "";
+
+	for (int i = 0; i < statements.size(); i++) {
+	    result += i + 1 + ") " + statements.get(i);
+	    result += "\n";
+	}
+
+	data.put("statements", result);
+	return this;
+    }
+
+    public PromptBuilder withLocations(List<Location> locations) {
 	data.put("locations", locations);
 	return this;
     }
@@ -59,7 +73,7 @@ public class PromptBuilder {
     }
 
     public PromptBuilder withWorld(World world) {
-	data.put("world", WorldModel.fromWorld(world));
+	data.put("world", WorldModel.fromWorld(agent.getFullName(), world));
 
 	if (data.get("locations") == null) {
 	    data.put("locations", world.getLocations());
@@ -88,14 +102,15 @@ public class PromptBuilder {
 	return this;
     }
 
-    public Prompt build() {
+    public PromptRequest build() {
 	if (prompt == null || prompt.isEmpty()) {
 	    throw new SmallvilleException("Must call a creation function to make a new prompt first");
 	}
 
 	TemplateEngine engine = new TemplateEngine();
 	prompt = engine.format(prompt, data);
+	PromptRequest result = new PromptRequest.User(prompt);
 
-	return new Prompt.User(prompt);
+	return result;
     }
 }

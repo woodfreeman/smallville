@@ -5,7 +5,15 @@ import org.slf4j.LoggerFactory;
 
 import io.github.nickm980.smallville.World;
 import io.github.nickm980.smallville.entities.Agent;
+import io.github.nickm980.smallville.prompts.Prompts;
 
+/**
+ * The AgentUpdate class is an abstract class that serves as a base for
+ * implementing agent update functionality.
+ * <p>
+ * It provides methods for setting the next update handler and starting the
+ * update process.
+ */
 public abstract class AgentUpdate {
 
     private AgentUpdate handler;
@@ -18,21 +26,21 @@ public abstract class AgentUpdate {
 	return handler;
     }
 
-    public boolean start(IChatService service, World world, Agent agent) {
+    public boolean start(Prompts service, World world, Agent agent, UpdateInfo info) {
 	AgentUpdate node = this;
 
 	while (node.parent != null) {
 	    node = node.parent;
 	}
 
-	return node.update(service, world, agent);
+	return node.update(service, world, agent, info);
     }
 
-    protected abstract boolean update(IChatService converter, World world, Agent agent);
+    protected abstract boolean update(Prompts converter, World world, Agent agen, UpdateInfo info);
 
-    protected boolean next(IChatService converter, World world, Agent agent) {
+    protected boolean next(Prompts converter, World world, Agent agent, UpdateInfo info) {
 	if (handler != null) {
-	    return handler.update(converter, world, agent);
+	    return handler.update(converter, world, agent, info);
 	} else {
 	    return true;
 	}

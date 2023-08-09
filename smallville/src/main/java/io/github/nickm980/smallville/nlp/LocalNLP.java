@@ -12,6 +12,7 @@ import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreSentence;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.simple.Sentence;
 import edu.stanford.nlp.util.CoreMap;
@@ -41,23 +42,58 @@ public class LocalNLP implements NLPCoreUtils {
 	getPipeline();
     }
 
-    enum Verbs {
-	GERUND("VBG"), VERB("V");
+    @Override
+    public String[] getEntities(String sentence) {
+	Annotation annotation = new Annotation(sentence);
+	List<String> result = new ArrayList<String>();
+	// Process the annotation
+	getPipeline().annotate(annotation);
 
-	private String token;
+	// Get the sentences from the annotation
+	List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
 
-	Verbs(String token) {
-	    this.token = token;
+	// Iterate over the sentences
+	for (CoreMap coreMap : sentences) {
+	    // Get the semantic graph of the sentence
+	    SemanticGraph semanticGraph = coreMap
+		.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+
+	    // Iterate over the edges in the graph
+	    for (edu.stanford.nlp.semgraph.SemanticGraphEdge edge : semanticGraph.edgeIterable()) {
+                String relation = edge.getRelation().getShortName();
+
+                // Check if the edge represents an observation relation
+                if (relation.equals("nsubjpass")) {
+                    String observedEntity = edge.getGovernor().word();
+                    String observer = edge.getDependent().word();
+                    result.add(observedEntity);
+                    result.add(observer);
+                    
+                    System.out.println("Observed entity: " + observedEntity);
+                    System.out.println("Observer: " + observer);
+                }
+	    }
 	}
-
-	String getToken() {
-	    return token;
-	}
+	
+	return result.toArray(new String[0]);
     }
 
     @Override
     public String convertToPastTense(String sentence) {
-	return convertSentence(sentence);
+	// Most of the responses either contain am or will, this is a hacky fix but it
+	// will work for most plans.
+	if (sentence.contains(" am ")) {
+	    return sentence.replace(" am ", " was ");
+	}
+
+	String result = convertSentence(sentence, Tense.PAST)
+	    .replaceAll("will", "")
+	    .replaceAll(" am ", "")
+	    .replace(".", "")
+	    .replaceAll("\\s+", " ")
+	    .trim();
+
+	return result;
     }
 
     @Override
@@ -75,6 +111,32 @@ public class LocalNLP implements NLPCoreUtils {
 	}
 
 	return result;
+    }
+
+    @Override
+    public String convertToPresentTense(String sentence) {
+	String result = convertSentence(sentence, Tense.PRESENT)
+	    .replaceAll("will", "am")
+	    .replaceAll("I am", "")
+	    .replace(".", "")
+	    .replaceAll("\\s+", " ")
+	    .trim();
+
+	return result;
+    }
+
+    private enum Verbs {
+	GERUND("VBG"), VERB("V");
+
+	private String token;
+
+	Verbs(String token) {
+	    this.token = token;
+	}
+
+	String getToken() {
+	    return token;
+	}
     }
 
     /**
@@ -116,20 +178,20 @@ public class LocalNLP implements NLPCoreUtils {
 	return sb.toString();
     }
 
-    public String inflectStem(String verb) {
+    public String inflectStem(String verb, Tense tense) {
 	XMLLexicon lexicon = new XMLLexicon();
 	WordElement word = lexicon.getWord(verb, LexicalCategory.VERB);
 	InflectedWordElement infl = new InflectedWordElement(word);
-	infl.setFeature(Feature.TENSE, Tense.PAST);
+	infl.setFeature(Feature.TENSE, tense);
 	Realiser realiser = new Realiser(lexicon);
 	String result = realiser.realise(infl).getRealisation();
 
 	return result;
     }
 
-    private String convertSentence(String sentence) {
-	if (sentence.contains(" am ")) {
-	    return sentence.replace(" am ", " was ");
+    private String convertSentence(String sentence, Tense tense) {
+	if (sentence == null || sentence.isEmpty()) {
+	    return sentence;
 	}
 
 	sentence = sentence.replaceAll("this", "the").replace(".", "").replaceAll("\\s+", " ").trim();
@@ -164,19 +226,13 @@ public class LocalNLP implements NLPCoreUtils {
 		    continue;
 		}
 
-		modified += inflectStem(lemma) + " ";
+		modified += inflectStem(lemma, tense) + " ";
 	    } else {
 
 		modified += word + " ";
 	    }
 	}
 
-	modified = modified
-	    .replaceAll("will", "")
-	    .replaceAll(" am ", "")
-	    .replace(".", "")
-	    .replaceAll("\\s+", " ")
-	    .trim();
 	return modified;
     }
 }

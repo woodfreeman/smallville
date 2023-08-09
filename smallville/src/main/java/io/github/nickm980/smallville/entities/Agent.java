@@ -1,22 +1,22 @@
 package io.github.nickm980.smallville.entities;
 
 import java.util.List;
-import io.github.nickm980.smallville.entities.memory.Characteristic;
-import io.github.nickm980.smallville.entities.memory.MemoryStream;
-import io.github.nickm980.smallville.entities.memory.Plan;
+
+import io.github.nickm980.smallville.memory.Characteristic;
+import io.github.nickm980.smallville.memory.MemoryStream;
 
 public class Agent {
 
     private MemoryStream memories;
     private String name;
     private ActionHistory currentAction;
-    private AgentLocation location;
-    private String goal = "";
-
-    public Agent(String name, List<Characteristic> characteristics, String currentAction, AgentLocation location) {
+    private Location location;
+    private String traits;
+    
+    public Agent(String name, List<Characteristic> characteristics, String currentAction, Location location) {
 	this.name = name;
 	this.memories = new MemoryStream();
-	this.memories.add(characteristics);
+	this.memories.addAll(characteristics);
 	this.location = location;
 	this.currentAction = new ActionHistory(currentAction);
     }
@@ -37,15 +37,11 @@ public class Agent {
 	this.currentAction.setActivity(description);
     }
 
-    public SimulatedObject getObject() {
-	return location.getObject();
+    public Location getLocation() {
+	return location;
     }
 
-    public SimulatedLocation getLocation() {
-	return location.getLocation();
-    }
-
-    public void setLocation(AgentLocation location) {
+    public void setLocation(Location location) {
 	this.location = location;
     }
 
@@ -61,23 +57,12 @@ public class Agent {
 	return memories;
     }
 
-    public List<Characteristic> getCharacteristics() {
-	return memories.getCharacteristics();
+    public void setTraits(String goal) {
+	this.traits = goal;
     }
 
-    public void addPlans(List<Plan> plans) {
-	memories.addPlans(plans);
+    public String getTraits() {
+	return traits;
     }
-
-    public List<Plan> getPlans() {
-	return memories.getPlans();
-    }
-
-    public void setGoal(String goal) {
-	this.goal = goal;
-    }
-
-    public String getGoal() {
-	return goal;
-    }
+    
 }

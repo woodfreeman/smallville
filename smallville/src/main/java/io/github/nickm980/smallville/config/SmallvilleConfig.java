@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.nickm980.smallville.config.prompts.Prompts;
 
 public class SmallvilleConfig {
@@ -23,8 +26,8 @@ public class SmallvilleConfig {
 
     public static Prompts getPrompts() {
 	if (prompts == null) {
-	    LOG.info("Loading prompts");
-	    prompts = loadFile("prompts.yaml", Prompts.class);
+	    LOG.info("Loading prompts...");
+	    prompts = loadYamlFile("prompts.yaml", Prompts.class);
 	}
 
 	return prompts;
@@ -32,23 +35,22 @@ public class SmallvilleConfig {
 
     public static GeneralConfig getConfig() {
 	if (config == null) {
-	    LOG.info("Loading config.yaml");
-	    config = loadFile("config.yaml", GeneralConfig.class);
+	    LOG.info("Loading config.yaml...");
+	    config = loadYamlFile("config.yaml", GeneralConfig.class);
 	}
 
 	return config;
     }
 
-    private static <T> T loadFile(String file, Class<T> clazz) {
-	Yaml yaml = new Yaml();
+    private static InputStream loadInputStream(String path) {
+	Path file = Paths.get(path);
 
-	Path configFile = Paths.get(file);
 	InputStream inputStream = null;
 
-	if (Files.exists(configFile)) {
+	if (Files.exists(file)) {
 	    LOG.debug("Configuration file found");
 	    try {
-		inputStream = Files.newInputStream(configFile);
+		inputStream = Files.newInputStream(file);
 	    } catch (IOException e) {
 		e.printStackTrace();
 	    }
@@ -61,6 +63,35 @@ public class SmallvilleConfig {
 	    LOG.error("No " + file + " found. It must be either in resources folder or next to jar");
 	}
 
-	return yaml.loadAs(inputStream, clazz);
+	return inputStream;
+    }
+
+    private static JsonNode loadJsonFile(String file) {
+	InputStream stream = loadInputStream(file);
+	ObjectMapper mapper = new ObjectMapper();
+	JsonNode result = null;
+	
+	try {
+	    result = mapper.readTree(stream);
+	    stream.close();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+
+	return result;
+    }
+
+    private static <T> T loadYamlFile(String file, Class<T> clazz) {
+	Yaml yaml = new Yaml();
+	InputStream stream = loadInputStream(file);
+	T result = yaml.loadAs(stream, clazz);
+
+	try {
+	    stream.close();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+
+	return result;
     }
 }

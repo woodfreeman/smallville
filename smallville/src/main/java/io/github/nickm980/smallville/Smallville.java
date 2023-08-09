@@ -8,10 +8,15 @@ import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 
+import io.github.nickm980.smallville.analytics.Analytics;
+import io.github.nickm980.smallville.analytics.AnalyticsListener;
 import io.github.nickm980.smallville.api.SmallvilleServer;
 import io.github.nickm980.smallville.config.CommandLineArgs;
 import io.github.nickm980.smallville.config.SmallvilleConfig;
+import io.github.nickm980.smallville.events.EventBus;
+import io.github.nickm980.smallville.events.agent.AgentUpdateEvent;
 import io.github.nickm980.smallville.llm.ChatGPT;
+import io.github.nickm980.smallville.math.SmallvilleMath;
 import io.github.nickm980.smallville.nlp.LocalNLP;
 
 public class Smallville {
@@ -28,17 +33,17 @@ public class Smallville {
 
 	Settings.setApiKey(key);
 
+	loadConfig();
+	Updater.checkLatestVersion();
+	
 	LOG.info("Starting server...");
 
-	loadConfig();
-
 	LocalNLP.preLoad();
+	SmallvilleMath.loadBert();
 
 	startServer(port);
-	
-	Updater.checkLatestVersion();
+
 	LOG.info("Smallville server started on port " + port);
-	
     }
 
     private static CommandLineArgs loadArgs(String[] args) {
@@ -61,8 +66,11 @@ public class Smallville {
     }
 
     private static void startServer(int port) {
-	SmallvilleServer server = new SmallvilleServer(new ChatGPT(), new World());
+        EventBus eventBus = EventBus.getEventBus();
 
-	server.start(port);
+        Analytics analytics = new Analytics();
+        eventBus.registerListener(new AnalyticsListener(analytics));
+        
+	new SmallvilleServer(analytics, new ChatGPT(), new World()).start(port);
     }
 }

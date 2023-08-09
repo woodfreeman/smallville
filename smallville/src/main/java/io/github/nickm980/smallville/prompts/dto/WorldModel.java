@@ -1,6 +1,7 @@
 package io.github.nickm980.smallville.prompts.dto;
 
 import io.github.nickm980.smallville.World;
+import io.github.nickm980.smallville.entities.Agent;
 import io.github.nickm980.smallville.entities.Location;
 
 public class WorldModel {
@@ -15,12 +16,20 @@ public class WorldModel {
 	this.description = description;
     }
 
-    public static WorldModel fromWorld(World world) {
+    public static WorldModel fromWorld(String name, World world) {
 	WorldModel result = new WorldModel();
 	String description = "Available Locations: ";
 
 	for (Location location : world.getLocations()) {
-	    description += location.asNaturalLanguage() + "; ";
+	    description += location.getFullPath() + "; ";
+	}
+
+	for (Agent agent : world.getAgents()) {
+	    if (agent.getFullName().equals(name)) {
+		continue;
+	    }
+	    description += agent.getFullName() + " is " + agent.getCurrentActivity() + " at "
+		    + agent.getLocation().getFullPath() + " ";
 	}
 
 	result.setDescription(description);
