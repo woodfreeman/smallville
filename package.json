@@ -1,18 +1,23 @@
 {
   "dependencies": {
-    "smallville": "^1.2.0"
+    "smallville": "^1.0.3"
   },
   "name": "smallville",
   "description": "My attempt at creating generative agent simulations for RPG games or research",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "main": "client.js",
   "directories": {
     "doc": "docs",
-    "example": "examples"
+    "example": "example"
   },
   "scripts": {
     "test": "node client.js"
   },
   "author": "woo",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "d:\\gitee\\smallville\\"
+  }
 }
